@@ -33,6 +33,19 @@ namespace LibraryWebServer.Controllers
       // TODO: Fill in. Determine if login is successful or not.
       bool loginSuccessful = false;
 
+      using (Team6LibraryContext db = new Team6LibraryContext())
+      {
+        var query = from p in db.Patrons
+                    where p.Name == name && p.CardNum == cardnum
+                    select p;
+
+        // See if any patrons matched the query
+        if (query.Count() == 1)
+        {
+          loginSuccessful = true;
+        }
+      }
+
       if(!loginSuccessful)
       {
         return Json(new { success = false });
