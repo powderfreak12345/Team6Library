@@ -152,8 +152,43 @@ namespace LibraryWebServer.Controllers
     [HttpPost]
     public ActionResult ListMyBooks()
     {
-      // TODO: Implement
-      return Json(null);
+        try
+        {
+            using (Team6LibraryContext db = new Team6LibraryContext())
+            {
+                    // Run the query
+                    var query = from tit in db.Titles
+                                join inv in db.Inventory
+                                on tit.Isbn equals inv.Isbn
+                                into titJoinInv
+
+                                from join1 in titJoinInv.DefaultIfEmpty()
+                                join chkOut in db.CheckedOut
+                                on join1.Serial equals chkOut.Serial
+                                into titJoinInvJoinChkOut
+
+                                from join2 in titJoinInvJoinChkOut.DefaultIfEmpty()
+                                where join2.CardNum == card
+
+                                select new
+                            {
+                                isbn = tit.Isbn,
+                                title = tit.Title,
+                                author = tit.Author,
+                                serial = (uint?)(join1.Serial)
+                            };
+
+                return Json(query.ToArray());
+
+
+            }
+        }
+        catch (Exception e)
+        {
+            // In case of exception, write it to debug in addition to throwing it
+            System.Diagnostics.Debug.WriteLine(e);
+            throw e;
+        }
     }
 
 
@@ -203,9 +238,27 @@ namespace LibraryWebServer.Controllers
     [HttpPost]
     public ActionResult ReturnBook(int serial)
     {
-      // You may have to cast serial to a (uint)
+        // You may have to cast serial to a (uint)
+        try
+        {
+            using (Team6LibraryContext db = new Team6LibraryContext())
+            {
+                // Create the CheckedOut object
+                CheckedOut checkedOut = new CheckedOut() { CardNum = (uint)card, Serial = (uint)serial };
 
-      return Json(new { success = true });
+                // Delete and save the new entry
+                db.CheckedOut.Remove(checkedOut);
+                db.SaveChanges();
+            }
+        }
+        catch (Exception e)
+        {
+            // In case of exception, write it to debug in addition to throwing it
+            System.Diagnostics.Debug.WriteLine(e);
+            throw e;
+        }
+
+            return Json(new { success = true });
     }
     
     /*******************************************/
