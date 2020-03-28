@@ -168,10 +168,28 @@ namespace LibraryWebServer.Controllers
     [HttpPost]
     public ActionResult CheckOutBook(int serial)
     {
-      // You may have to cast serial to a (uint)
+      // Encapsulate in try/catch block in case of error
+      try
+      {
+        using (Team6LibraryContext db = new Team6LibraryContext())
+        {
+          // Create the CheckedOut object
+          CheckedOut checkedOut = new CheckedOut() { CardNum = (uint)card, Serial = (uint)serial };
+          
+          // Add and save the new entry
+          db.CheckedOut.Add(checkedOut);
+          db.SaveChanges();
+        }
+      }
+      catch (Exception e)
+      {
+        // In case of exception, write it to debug in addition to throwing it
+        System.Diagnostics.Debug.WriteLine(e);
+        throw e;
+      }
 
-
-        return Json(new { success = true });
+      // Placeholder
+      return Json(new { success = true });
     }
 
 
