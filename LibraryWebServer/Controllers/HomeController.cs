@@ -121,27 +121,14 @@ namespace LibraryWebServer.Controllers
                       from join3 in titJoinInvJoinChkOutJoinPat.DefaultIfEmpty()
                       select new
                       {
-                        Isbn = tit.Isbn,
-                        Title = tit.Title,
-                        Author = tit.Author,
-                        Serial = join1 == null ? null : (uint?)(join1.Serial),
-                        Name = join3 == null ? "" : join3.Name
+                        isbn = tit.Isbn,
+                        title = tit.Title,
+                        author = tit.Author,
+                        serial = join1 == null ? null : (uint?)(join1.Serial),
+                        name = join3 == null ? "" : join3.Name
                       };
 
-          // Construct the JObject
-          JArray titlesArray = new JArray();
-          foreach (var title in query)
-          {
-            JObject thing = new JObject();
-            thing.Add("isbn", title.Isbn);
-            thing.Add("title", title.Title);
-            thing.Add("author", title.Author);
-            thing.Add("serial", title.Serial);
-            thing.Add("name", title.Name);
-            titlesArray.Add(thing);
-          }
-
-          return Json( titlesArray );
+          return Json( query.ToArray() );
 
 
         }
@@ -152,8 +139,6 @@ namespace LibraryWebServer.Controllers
         System.Diagnostics.Debug.WriteLine(e);
         throw e;
       }
-
-
     }
 
     /// <summary>
