@@ -39,6 +39,9 @@
       
 
       $.each(books, function (i, item) {
+
+        // alert(JSON.stringify(item));
+
         var tr = document.createElement("tr");
 
         var td = document.createElement("td");
@@ -138,7 +141,7 @@
         url: '@Url.Action("AllTitles", "Home")',
         dataType: 'json',
         success: function (data, status) {
-          //alert(JSON.stringify(data));
+          // alert(JSON.stringify(data));
           PopulateTable(tbl, data);
         },
         error: function (ex) {

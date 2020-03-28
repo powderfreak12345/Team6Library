@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using LibraryWebServer;
 using LibraryWebServer.Models;
+using Newtonsoft.Json.Linq;
 
 namespace LibraryWebServer.Controllers
 {
@@ -30,21 +31,33 @@ namespace LibraryWebServer.Controllers
     [HttpPost]
     public IActionResult CheckLogin(string name, int cardnum)
     {
-      // TODO: Fill in. Determine if login is successful or not.
+      // Determine if login is successful or not.
       bool loginSuccessful = false;
 
-      using (Team6LibraryContext db = new Team6LibraryContext())
+      try
       {
-        var query = from p in db.Patrons
-                    where p.Name == name && p.CardNum == cardnum
-                    select p;
-
-        // See if any patrons matched the query
-        if (query.Count() == 1)
+        using (Team6LibraryContext db = new Team6LibraryContext())
         {
-          loginSuccessful = true;
+          // Run a query for users with matching name and cardnum
+          var query = from p in db.Patrons
+                      where p.Name == name && p.CardNum == cardnum
+                      select p;
+
+          // See if any patrons matched the query
+          if (query.Count() == 1)
+          {
+            loginSuccessful = true;
+          }
         }
       }
+      catch(Exception e)
+      {
+        // In case of exception, write it to debug in addition to throwing it
+        System.Diagnostics.Debug.WriteLine(e);
+        throw e;
+      }
+
+      
 
       if(!loginSuccessful)
       {
@@ -84,10 +97,62 @@ namespace LibraryWebServer.Controllers
     [HttpPost]
     public ActionResult AllTitles()
     {
+      // Encapsulate in try/catch block in case of error
+      try
+      {
+        using (Team6LibraryContext db = new Team6LibraryContext())
+        {
+          // Run the query
+          var query = from tit in db.Titles
+                      join inv in db.Inventory
+                      on tit.Isbn equals inv.Isbn
+                      into titJoinInv
 
-      // TODO: Implement
-      
-      return Json(null);
+                      from join1 in titJoinInv.DefaultIfEmpty()
+                      join chkOut in db.CheckedOut
+                      on join1.Serial equals chkOut.Serial
+                      into titJoinInvJoinChkOut
+
+                      from join2 in titJoinInvJoinChkOut.DefaultIfEmpty()
+                      join pat in db.Patrons
+                      on join2.CardNum equals pat.CardNum
+                      into titJoinInvJoinChkOutJoinPat
+
+                      from join3 in titJoinInvJoinChkOutJoinPat.DefaultIfEmpty()
+                      select new
+                      {
+                        Isbn = tit.Isbn,
+                        Title = tit.Title,
+                        Author = tit.Author,
+                        Serial = join1 == null ? null : (uint?)(join1.Serial),
+                        Name = join3 == null ? "" : join3.Name
+                      };
+
+          // Construct the JObject
+          JArray titlesArray = new JArray();
+          foreach (var title in query)
+          {
+            JObject thing = new JObject();
+            thing.Add("isbn", title.Isbn);
+            thing.Add("title", title.Title);
+            thing.Add("author", title.Author);
+            thing.Add("serial", title.Serial);
+            thing.Add("name", title.Name);
+            titlesArray.Add(thing);
+          }
+
+          return Json( titlesArray );
+
+
+        }
+      }
+      catch (Exception e)
+      {
+        // In case of exception, write it to debug in addition to throwing it
+        System.Diagnostics.Debug.WriteLine(e);
+        throw e;
+      }
+
 
     }
 
